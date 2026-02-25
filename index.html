@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avatar Component — QA Report</title>
+  <style>
+    :root {
+      --bg: #f8f9fc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #030e1d;
+      --text-muted: #4a5568;
+      --text-subtle: #718096;
+      --accent: #0a73eb;
+      --green: #075121;
+      --green-bg: #bff8d3;
+      --red: #5f1018;
+      --red-bg: #ffccd1;
+      --yellow: #714900;
+      --yellow-bg: #ffeda3;
+      --orange: #842c19;
+      --orange-bg: #ffeae5;
+      --tag-critical-bg: #ffccd1;
+      --tag-critical-text: #5f1018;
+      --tag-major-bg: #ffeda3;
+      --tag-major-text: #714900;
+      --tag-minor-bg: #c4efff;
+      --tag-minor-text: #0a4d67;
+      --tag-pass-bg: #bff8d3;
+      --tag-pass-text: #075121;
+      --radius: 8px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 0;
+    }
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e5f1ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+    .header-meta h1 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+    .header-meta p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .header-meta a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .header-meta a:hover { text-decoration: underline; }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* ── Summary cards ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .summary-card .count {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .summary-card .label { font-size: 12px; font-weight: 500; }
+    .summary-card.critical .count { color: var(--tag-critical-text); }
+    .summary-card.critical { border-left: 3px solid #e21328; }
+    .summary-card.major .count { color: var(--tag-major-text); }
+    .summary-card.major { border-left: 3px solid #e88500; }
+    .summary-card.minor .count { color: var(--tag-minor-text); }
+    .summary-card.minor { border-left: 3px solid #0a8db4; }
+
+    /* ── Section ── */
+    section { display: flex; flex-direction: column; gap: 16px; }
+    section h2 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead th {
+      background: var(--bg);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 12px 16px; vertical-align: top; }
+    tbody tr:hover { background: #f8f9fc; }
+
+    /* ── Tags ── */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      letter-spacing: 0.2px;
+    }
+    .tag.critical { background: var(--tag-critical-bg); color: var(--tag-critical-text); }
+    .tag.major    { background: var(--tag-major-bg);    color: var(--tag-major-text); }
+    .tag.minor    { background: var(--tag-minor-bg);    color: var(--tag-minor-text); }
+    .tag.pass     { background: var(--tag-pass-bg);     color: var(--tag-pass-text); }
+
+    /* ── Issue cards ── */
+    .issue-list { display: flex; flex-direction: column; gap: 12px; }
+    .issue-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .issue-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .issue-number {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .issue-title { font-weight: 600; font-size: 14px; }
+    .issue-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .issue-body { padding: 16px; }
+    .issue-desc { color: var(--text-muted); margin-bottom: 14px; line-height: 1.65; }
+    .issue-expected {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 10px 12px;
+      border-radius: 0 4px 4px 0;
+      font-size: 12px;
+      color: var(--green);
+    }
+    .issue-expected strong { display: block; font-weight: 600; margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* ── Comparison rows ── */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .compare-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: var(--bg);
+      font-size: 12px;
+    }
+    .compare-box .compare-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-subtle);
+      margin-bottom: 4px;
+    }
+    .compare-box .compare-value {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .compare-box.mismatch { border-color: #e21328; background: #fff5f6; }
+    .compare-box.mismatch .compare-value { color: #cf1125; }
+    .compare-box.match { border-color: #22c55e; background: #f0fdf4; }
+    .compare-box.match .compare-value { color: var(--green); }
+
+    /* ── Inline code ── */
+    code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #1e40af;
+    }
+
+    /* ── Color swatches in table ── */
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .swatch-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+
+    @media (max-width: 640px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .compare { grid-template-columns: 1fr; }
+      main { padding: 24px 16px; }
+      .header-inner { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-badge">👤</div>
+    <div class="header-meta">
+      <h1>Avatar — QA Report</h1>
+      <p>
+        <a href="https://www.figma.com/design/poaMyU7abAgL9VRhx4ygyy/Unity-DS-%3E-Components-Library?node-id=19-3853" target="_blank" rel="noopener">Figma design</a>
+        &nbsp;·&nbsp;
+        <a href="https://unity-components.payfit.io/?path=/docs/component-reference-avatar--docs" target="_blank" rel="noopener">Storybook</a>
+        &nbsp;·&nbsp;
+        <span>@payfit/unity-components@2.10.1</span>
+        &nbsp;·&nbsp;
+        <span>February 25, 2026</span>
+      </p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Summary -->
+  <div class="summary-grid">
+    <div class="summary-card critical">
+      <span class="count">1</span>
+      <span class="label">Critical</span>
+    </div>
+    <div class="summary-card major">
+      <span class="count">3</span>
+      <span class="label">Major</span>
+    </div>
+    <div class="summary-card minor">
+      <span class="count">4</span>
+      <span class="label">Minor</span>
+    </div>
+  </div>
+
+  <!-- Passing checks -->
+  <section>
+    <h2>Passing checks</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>Figma</th>
+            <th>Storybook</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Shape variants</td>
+            <td>Person = circle, Entity = square</td>
+            <td><code>variant: 'circle' | 'square'</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Size sm (Small)</td>
+            <td>24px</td>
+            <td><code>sm = uy:size-300 = 24px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Size md (Medium)</td>
+            <td>32px</td>
+            <td><code>md = uy:size-400 = 32px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Size lg (Large)</td>
+            <td>40px</td>
+            <td><code>lg = uy:size-500 = 40px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Square border-radius — sm</td>
+            <td><code>radius-50 = 4px</code></td>
+            <td><code>uy:rounded-50 = 4px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Square border-radius — md</td>
+            <td><code>radius-75 = 6px</code></td>
+            <td><code>uy:rounded-75 = 6px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Square border-radius — lg</td>
+            <td><code>radius-100 = 8px</code></td>
+            <td><code>uy:rounded-100 = 8px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Circle border-radius</td>
+            <td><code>radius-circle = 50%</code></td>
+            <td><code>uy:rounded-circle = 50%</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>All 11 icon background color tokens</td>
+            <td>teal, plum, purple, orange, neutral, warning, success, info, danger, promo, primary</td>
+            <td>All 11 resolve to identical hex values</td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>AvatarPair border</td>
+            <td><code>border-inverted/default = #ffffff</code></td>
+            <td><code>uy:border-content-inverted</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>AvatarPair size (non-xl parent)</td>
+            <td>16px</td>
+            <td><code>xs = 16px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>AvatarPair offset (non-xl parent)</td>
+            <td>Bottom-right at −4px</td>
+            <td><code>--pair-offset: 4px</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Fallback text color</td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#030e1d"></span><code>#030e1d</code></span></td>
+            <td><code>uy:text-content-neutral</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Fallback font (sm–md)</td>
+            <td><code>font/size/50 = 12px, weight 500</code></td>
+            <td><code>uy:typography-body-small-strong</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Placeholder — sunglow</td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#ffd470"></span><code>sunglow/L3 = #ffd470</code></span></td>
+            <td><code>uy:bg-sunglow-l3</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Placeholder — peach</td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#ffac99"></span><code>peach/L3 = #ffac99</code></span></td>
+            <td><code>uy:bg-peach-l3</code></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>Spacing tokens</td>
+            <td><code>space-25=2px</code>, <code>space-50=4px</code>, <code>space-125=10px</code></td>
+            <td>Same values resolved</td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Issues -->
+  <section>
+    <h2>Issues found</h2>
+    <div class="issue-list">
+
+      <!-- #1 Critical -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">1</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Extra large avatar size mismatch</span>
+              <span class="tag critical">Critical</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">The Figma <strong>Extra large</strong> Avatar (both Person and Entity) is <strong>56px</strong>. The Storybook <code>xl</code> size resolves to <strong>80px</strong> via <code>uy:size-1000</code>. This is the most impactful discrepancy — the component renders at a notably larger size than designed.</p>
+          <div class="compare">
+            <div class="compare-box mismatch">
+              <div class="compare-label">Figma — Extra large</div>
+              <div class="compare-value">56 × 56px</div>
+            </div>
+            <div class="compare-box mismatch">
+              <div class="compare-label">Storybook — xl</div>
+              <div class="compare-value">80 × 80px (uy:size-1000)</div>
+            </div>
+          </div>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Align on a single value. Either update <code>xl</code> to use a 56px spacing token, or update the Figma design to 80px and re-verify all layout usages.
+          </div>
+        </div>
+      </div>
+
+      <!-- #2 Major -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">2</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Extra large square — hardcoded border-radius, no token</span>
+              <span class="tag major">Major</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">The Figma Extra large Entity uses a hardcoded <code>11.2px</code> border-radius with no design token reference. The Storybook implementation uses <code>uy:rounded-200 = 16px</code>. The visual ratio is consistent at ~20% of the container, but the Figma value is not tokenised.</p>
+          <div class="compare">
+            <div class="compare-box mismatch">
+              <div class="compare-label">Figma — Extra large square</div>
+              <div class="compare-value">11.2px (hardcoded)</div>
+            </div>
+            <div class="compare-box mismatch">
+              <div class="compare-label">Storybook — xl square</div>
+              <div class="compare-value">uy:rounded-200 = 16px</div>
+            </div>
+          </div>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Figma should reference <code>var(--corner-radius/radius-200, 16px)</code>. Once size is aligned (issue #1), both values should match.
+          </div>
+        </div>
+      </div>
+
+      <!-- #3 Major -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">3</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Icon size inside Avatar doesn't match Figma</span>
+              <span class="tag major">Major</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">The Figma <strong>Icon</strong> component uses a fixed <strong>20px</strong> icon across all sizes, varying only the outer padding. Storybook <code>AvatarIcon</code> scales the icon proportionally with the avatar size. This produces different icon-to-container ratios at <code>sm</code> and <code>lg</code>.</p>
+          <div class="table-wrap" style="margin: 12px 0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Avatar size</th>
+                  <th>Figma icon size</th>
+                  <th>Storybook icon size</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>sm</code> (24px)</td>
+                  <td>20px</td>
+                  <td>16px</td>
+                  <td><span class="tag critical">Mismatch</span></td>
+                </tr>
+                <tr>
+                  <td><code>md</code> (32px)</td>
+                  <td>20px</td>
+                  <td>20px</td>
+                  <td><span class="tag pass">Match</span></td>
+                </tr>
+                <tr>
+                  <td><code>lg</code> (40px)</td>
+                  <td>20px</td>
+                  <td>24px</td>
+                  <td><span class="tag critical">Mismatch</span></td>
+                </tr>
+                <tr>
+                  <td><code>xl</code></td>
+                  <td>~14px</td>
+                  <td>40px</td>
+                  <td><span class="tag critical">Mismatch</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Decide on one approach: fixed 20px icon (Figma) or proportional scaling (Storybook). Update the implementation or design accordingly so all sizes are consistent.
+          </div>
+        </div>
+      </div>
+
+      <!-- #4 Major -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">4</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Decorative text color tokens — wrong tier referenced in Figma</span>
+              <span class="tag major">Major</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">For some color variants, Figma references <code>default</code>-tier content tokens while Storybook uses <code>high</code>-tier tokens (darker, higher-contrast colors). This affects Purple, Orange, and Primary text in icon/fallback avatars.</p>
+          <div class="table-wrap" style="margin: 12px 0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Color</th>
+                  <th>Figma token (default)</th>
+                  <th>Storybook hex (high tier)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Purple text</td>
+                  <td><code>content/decorative-purple/default = </code><span class="swatch"><span class="swatch-dot" style="background:#7b62ff;border:1px solid #ccc"></span>#7b62ff</span></td>
+                  <td><span class="swatch"><span class="swatch-dot" style="background:#291a77;border:1px solid #ccc"></span>#291a77</span></td>
+                </tr>
+                <tr>
+                  <td>Orange text</td>
+                  <td><code>content/decorative-orange/default = </code><span class="swatch"><span class="swatch-dot" style="background:#f86544;border:1px solid #ccc"></span>#f86544</span></td>
+                  <td><span class="swatch"><span class="swatch-dot" style="background:#842c19;border:1px solid #ccc"></span>#842c19</span></td>
+                </tr>
+                <tr>
+                  <td>Primary text</td>
+                  <td><code>content/primary/default = </code><span class="swatch"><span class="swatch-dot" style="background:#0a73eb;border:1px solid #ccc"></span>#0a73eb</span></td>
+                  <td><span class="swatch"><span class="swatch-dot" style="background:#084385;border:1px solid #ccc"></span>#084385</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Figma should reference the <code>high</code>-tier tokens (<code>content/decorative-purple/high</code>, <code>content/decorative-orange/high</code>, <code>content/primary/high</code>) to match what is implemented for better contrast.
+          </div>
+        </div>
+      </div>
+
+      <!-- #5 Minor -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">5</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Avatar size <code>xs</code> (16px) in Storybook — not documented in Figma</span>
+              <span class="tag minor">Minor</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">The Storybook exposes an <code>xs</code> (16px) size for the main <code>Avatar</code> component. In Figma, 16px only appears as the <code>AvatarPair</code> sub-component — it is not a standalone Avatar size in the component spec.</p>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Either add a corresponding <code>xs</code> size to the Figma design documentation, or restrict its usage in Storybook to the <code>AvatarPair</code> context only.
+          </div>
+        </div>
+      </div>
+
+      <!-- #6 Minor -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">6</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Placeholder <code>blue</code> color in Storybook — absent from Figma component</span>
+              <span class="tag minor">Minor</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">The Storybook <code>AvatarFallback</code> placeholder variant has three colors: <code>sunglow</code>, <code>peach</code>, and <code>blue</code> (<code>uy:bg-blue-l7 = #0d62c4</code>). The Figma only shows the first two. A note in the Figma frame reads: <em>"New decorative colour 'shades-150' will have to be added to the token library — owned by Brand team."</em> The <code>blue/L7</code> token exists in the Figma variables but the variant is not shown in the published component.</p>
+          <div class="compare">
+            <div class="compare-box mismatch">
+              <div class="compare-label">Figma placeholder variants</div>
+              <div class="compare-value">sunglow, peach</div>
+            </div>
+            <div class="compare-box mismatch">
+              <div class="compare-label">Storybook placeholder variants</div>
+              <div class="compare-value">sunglow, peach, blue</div>
+            </div>
+          </div>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Add the <code>blue</code> placeholder variant to the Figma component once the Brand team confirms the token, or remove it from the implementation until the design is finalised.
+          </div>
+        </div>
+      </div>
+
+      <!-- #7 Minor -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">7</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">AvatarPair behavior for <code>xl</code> parent — not documented in Figma</span>
+              <span class="tag minor">Minor</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">In Storybook, when the parent <code>Avatar</code> is <code>xl</code>, the <code>AvatarPair</code> automatically switches to <code>sm</code> (24px) size with <code>0px</code> offset. Figma only shows the 16px pair at a fixed position and documents no behavior for an Extra large parent.</p>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Document the <code>xl</code> parent behavior in Figma: pair size = 24px, offset = 0px.
+          </div>
+        </div>
+      </div>
+
+      <!-- #8 Minor -->
+      <div class="issue-card">
+        <div class="issue-card-header">
+          <div class="issue-number">8</div>
+          <div>
+            <div class="issue-title-row">
+              <span class="issue-title">Fallback typography at <code>lg</code> and <code>xl</code> — not specified in Figma</span>
+              <span class="tag minor">Minor</span>
+            </div>
+          </div>
+        </div>
+        <div class="issue-body">
+          <p class="issue-desc">The Storybook <code>AvatarFallback</code> changes typography at larger sizes — <code>lg</code> uses <code>body-strong</code> (16px/500) and <code>xl</code> uses <code>h2</code> (22px/600). The Figma design only documents the Small Avatar initials at 12px. No typographic specs are provided for <code>lg</code> or <code>xl</code> initials.</p>
+          <div class="table-wrap" style="margin: 12px 0;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Figma</th>
+                  <th>Storybook</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>sm</code> / <code>md</code></td>
+                  <td>12px, weight 500</td>
+                  <td><code>body-small-strong</code> — 12px / 500</td>
+                </tr>
+                <tr>
+                  <td><code>lg</code></td>
+                  <td>Not specified</td>
+                  <td><code>body-strong</code> — 16px / 500</td>
+                </tr>
+                <tr>
+                  <td><code>xl</code></td>
+                  <td>Not specified</td>
+                  <td><code>h2</code> — 22px / 600</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="issue-expected">
+            <strong>Expected</strong>
+            Add typography specs for <code>lg</code> and <code>xl</code> initials fallback to the Figma component documentation.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Color token reference -->
+  <section>
+    <h2>Icon color token reference</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Color</th>
+            <th>Background token</th>
+            <th>Bg hex</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>teal</td>
+            <td><code>surface/decorative-teal/lowest</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#e9fbfb"></span>#e9fbfb</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>plum</td>
+            <td><code>surface/decorative-plum/lowest</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#ffe5f4"></span>#ffe5f4</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>purple</td>
+            <td><code>surface/decorative-purple/lowest</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#f2f0ff"></span>#f2f0ff</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>orange</td>
+            <td><code>surface/decorative-orange/lowest</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#ffeae5"></span>#ffeae5</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>neutral</td>
+            <td><code>surface/neutral/lowest/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#eceff4"></span>#eceff4</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>warning</td>
+            <td><code>surface/warning/low/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#ffeda3"></span>#ffeda3</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>success</td>
+            <td><code>surface/success/low/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#bff8d3"></span>#bff8d3</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>info</td>
+            <td><code>surface/info/low/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#c4efff"></span>#c4efff</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>danger</td>
+            <td><code>surface/danger/low/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#ffccd1"></span>#ffccd1</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>promo</td>
+            <td><code>surface/promo/low/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#f9cde6"></span>#f9cde6</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>primary</td>
+            <td><code>surface/primary/lowest/default</code></td>
+            <td><span class="swatch"><span class="swatch-dot" style="background:#e5f1ff"></span>#e5f1ff</span></td>
+            <td><span class="tag pass">Pass</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Avatar Component QA — Unity Design System · PayFit · Generated February 25, 2026
+</footer>
+
+</body>
+</html>
